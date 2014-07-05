@@ -1,5 +1,7 @@
 # Pragmatic Toolset
 
+[![Build Status][travis_img]][travis]
+
 an experimental set of helper functions 
 
 ### Quick Look
@@ -89,5 +91,7 @@ Any to list
 
 Provided under the terms of [the MIT license][license].
 
+[travis]:https://travis-ci.org/manifest/pt
+[travis_img]:https://secure.travis-ci.org/manifest/pt.png
 [license]:http://www.opensource.org/licenses/MIT
 
