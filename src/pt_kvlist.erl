@@ -22,8 +22,8 @@
 %% IN THE SOFTWARE.
 %% ------------------------------------------------------------------
 
--module(pt_plist).
--behaviour(pt_kv_store).
+-module(pt_kvlist).
+-behaviour(pt_kvstore).
 
 %% API
 -export([
@@ -43,44 +43,44 @@
 ]).
 
 %% Types
--type plist() :: [{any(), any()}].
+-type kvlist() :: [{any(), any()}].
 
--export_type([plist/0]).
+-export_type([kvlist/0]).
 
 %% ==================================================================
 %% API
 %% ==================================================================
 
--spec keys(plist()) -> [any()].
+-spec keys(kvlist()) -> [any()].
 keys(L) ->
 	lists:map(fun({Key, _}) -> Key end, L).
 
--spec values(plist()) -> [any()].
+-spec values(kvlist()) -> [any()].
 values(L) ->
 	lists:map(fun({_, Val}) -> Val end, L).
 
--spec get(any(), plist()) -> any().
+-spec get(any(), kvlist()) -> any().
 get(Key, L) ->
 	case find(Key, L) of
 		undefined -> erlang:error(bad_key);
 		Val       -> Val
 	end.
 
--spec get(any(), plist(), any()) -> any().
+-spec get(any(), kvlist(), any()) -> any().
 get(Key, L, Default) ->
 	case lists:keyfind(Key, 1, L) of
 		{Key, Val} -> Val;
 		false      -> Default
 	end.
 
--spec get_in([any()], plist()) -> any().
+-spec get_in([any()], kvlist()) -> any().
 get_in(Keys, L) ->
 	case find_in(Keys, L) of
 		undefined -> erlang:error(bad_key);
 		Val       -> Val 
 	end.
 
--spec get_in([any()], plist(), any()) -> any().
+-spec get_in([any()], kvlist(), any()) -> any().
 get_in([], L, _) ->
 	L;
 get_in([Key|Keys], L, Default) ->
@@ -91,15 +91,15 @@ get_in([Key|Keys], L, Default) ->
 		{true,  _} -> get_in(Keys, Child, Default)
 	end.
 
--spec find(any(), plist()) -> undefined | any().
+-spec find(any(), kvlist()) -> undefined | any().
 find(Key, L) ->
 	?MODULE:get(Key, L, undefined).
 
--spec find_in([any()], plist()) -> any().
+-spec find_in([any()], kvlist()) -> any().
 find_in(Keys, L) ->
 	get_in(Keys, L, undefined).
 
--spec select_keys([any()], plist()) -> plist().
+-spec select_keys([any()], kvlist()) -> kvlist().
 select_keys(Keys, L) ->
 	lists:foldl(
 		fun({Key, Val}, Acc) ->
@@ -109,12 +109,12 @@ select_keys(Keys, L) ->
 			end
 		end, [], L).
 
--spec put(any(), any(), plist()) -> plist().
+-spec put(any(), any(), kvlist()) -> kvlist().
 put(Key, Val, L) ->
 	L2 = remove(Key, L),
 	[{Key, Val}|L2].
 
--spec merge(plist(), plist()) -> plist().
+-spec merge(kvlist(), kvlist()) -> kvlist().
 merge(L1, []) ->
 	L1;
 merge([], L2) ->
@@ -124,11 +124,11 @@ merge(L1, L2) ->
 	L11 = lists:filter(fun({Key, _}) -> not lists:member(Key, L2Keys) end, L1),
 	lists:merge(L11, L2).
 
--spec remove(any(), plist()) -> plist().
+-spec remove(any(), kvlist()) -> kvlist().
 remove(Key, L) ->
 	lists:keydelete(Key, 1, L).
 
--spec is_empty(plist()) -> boolean().
+-spec is_empty(kvlist()) -> boolean().
 is_empty(L) ->
 	L =:= [].
 

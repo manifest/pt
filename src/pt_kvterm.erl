@@ -22,8 +22,8 @@
 %% IN THE SOFTWARE.
 %% ------------------------------------------------------------------
 
--module(pt_mlist).
--behaviour(pt_kv_store).
+-module(pt_kvterm).
+-behaviour(pt_kvstore).
 
 %% API
 -export([
@@ -45,80 +45,80 @@
 ]).
 
 %% Definitions
--define(BRIDGE(Fun, ML),
+-define(BRIDGE(Fun, T),
 	(fun
 		(M) when is_map(M) -> pt_map:Fun(M);
-		(L)                -> pt_plist:Fun(L)
-	end)(ML)).
+		(L)                -> pt_kvlist:Fun(L)
+	end)(T)).
 
--define(BRIDGE(Fun, Arg1, ML),
+-define(BRIDGE(Fun, Arg1, T),
 	(fun
 		(M) when is_map(M) -> pt_map:Fun(Arg1, M);
-		(L)                -> pt_plist:Fun(Arg1, L)
-	end)(ML)).
+		(L)                -> pt_kvlist:Fun(Arg1, L)
+	end)(T)).
 
--define(BRIDGE(Fun, Arg1, Arg2, ML),
+-define(BRIDGE(Fun, Arg1, Arg2, T),
 	(fun
 		(M) when is_map(M) -> pt_map:Fun(Arg1, Arg2, M);
-		(L)                -> pt_plist:Fun(Arg1, Arg2, L)
-	end)(ML)).
+		(L)                -> pt_kvlist:Fun(Arg1, Arg2, L)
+	end)(T)).
 
--define(BRIDGE_D(Fun, Arg1, ML, Default),
+-define(BRIDGE_D(Fun, Arg1, T, Default),
 	(fun
 		(M) when is_map(M) -> pt_map:Fun(Arg1, M, Default);
-		(L)                -> pt_plist:Fun(Arg1, L, Default)
-	end)(ML)).
+		(L)                -> pt_kvlist:Fun(Arg1, L, Default)
+	end)(T)).
 
 %% Types
--type mlist() :: map() | pt_plist:plist().
+-type kvterm() :: map() | pt_kvlist:kvlist().
 
--export_type([mlist/0]).
+-export_type([kvterm/0]).
 
 %% ==================================================================
 %% API
 %% ==================================================================
 
--spec keys(mlist()) -> [any()].
-keys(ML) ->
-	?BRIDGE(keys, ML).
+-spec keys(kvterm()) -> [any()].
+keys(T) ->
+	?BRIDGE(keys, T).
 
--spec values(mlist()) -> [any()].
-values(ML) ->
-	?BRIDGE(values, ML).
+-spec values(kvterm()) -> [any()].
+values(T) ->
+	?BRIDGE(values, T).
 
--spec get(any(), mlist()) -> any().
-get(Key, ML) ->
-	?BRIDGE(get, Key, ML).
+-spec get(any(), kvterm()) -> any().
+get(Key, T) ->
+	?BRIDGE(get, Key, T).
 
--spec get(any(), mlist(), any()) -> any().
-get(Key, ML, Default) ->
-	?BRIDGE_D(get, Key, ML, Default).
+-spec get(any(), kvterm(), any()) -> any().
+get(Key, T, Default) ->
+	?BRIDGE_D(get, Key, T, Default).
 
--spec get_in([any()], mlist()) -> any().
-get_in(Keys, ML) ->
-	?BRIDGE(get_in, Keys, ML).
+-spec get_in([any()], kvterm()) -> any().
+get_in(Keys, T) ->
+	?BRIDGE(get_in, Keys, T).
 
--spec get_in([any()], mlist(), any()) -> any().
-get_in(Keys, ML, Default) ->
-	?BRIDGE_D(get_in, Keys, ML, Default).
+-spec get_in([any()], kvterm(), any()) -> any().
+get_in(Keys, T, Default) ->
+	?BRIDGE_D(get_in, Keys, T, Default).
 
--spec find(any(), mlist()) -> undefined | any().
-find(Key, ML) ->
-	?BRIDGE(find, Key, ML).
+-spec find(any(), kvterm()) -> undefined | any().
+find(Key, T) ->
+	?BRIDGE(find, Key, T).
 
--spec find_in([any()], mlist()) -> undefined | any().
-find_in(Keys, ML) ->
-	?BRIDGE(find_in, Keys, ML).
+-spec find_in([any()], kvterm()) -> undefined | any().
+find_in(Keys, T) ->
+	?BRIDGE(find_in, Keys, T).
 
--spec select_keys([any()], mlist()) -> mlist().
-select_keys(Keys, ML) ->
-	?BRIDGE(select_keys, Keys, ML).
+-spec select_keys([any()], kvterm()) -> kvterm().
+select_keys(Keys, T) ->
+	?BRIDGE(select_keys, Keys, T).
 
--spec put(any(), any(), mlist()) -> mlist().
-put(Key, Val, ML) ->
-	?BRIDGE(put, Key, Val, ML).
+-spec put(any(), any(), kvterm()) -> kvterm().
+put(Key, Val, T) ->
+	?BRIDGE(put, Key, Val, T).
 
--spec merge(mlist(), mlist()) -> mlist().
+-spec merge(kvterm(), kvterm()) -> kvterm().
 merge(L, M) when not is_map(L), is_map(M) ->
 	M1 = to_map(L),
 	merge(M1, M);
@@ -128,21 +128,21 @@ merge(M, L) when not is_map(L), is_map(M) ->
 merge(M1, M2) when is_map(M1) ->
 	pt_map:merge(M1, M2);
 merge(L1, L2) ->
-	pt_plist:merge(L1, L2).
+	pt_kvlist:merge(L1, L2).
 
--spec remove(any(), mlist()) -> mlist().
-remove(Key, ML) ->
-	?BRIDGE(remove, Key, ML).
+-spec remove(any(), kvterm()) -> kvterm().
+remove(Key, T) ->
+	?BRIDGE(remove, Key, T).
 
--spec is_empty(mlist()) -> boolean().
-is_empty(ML) ->
-	?BRIDGE(is_empty, ML).
+-spec is_empty(kvterm()) -> boolean().
+is_empty(T) ->
+	?BRIDGE(is_empty, T).
 
--spec to_map(mlist()) -> map().
+-spec to_map(kvterm()) -> map().
 to_map(M) when is_map(M) -> M;
 to_map(L)                -> maps:from_list(L).
 
--spec to_list(mlist()) -> pt_plist:plist().
+-spec to_list(kvterm()) -> pt_kvlist:kvlist().
 to_list(M) when is_map(M) -> maps:to_list(M);
 to_list(L)                -> L.
 

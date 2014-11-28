@@ -22,7 +22,7 @@
 %% IN THE SOFTWARE.
 %% ------------------------------------------------------------------
 
--module(pt_kv_store).
+-module(pt_kvstore).
 
 -callback keys(Store) -> Vals
 	when

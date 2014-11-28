@@ -23,7 +23,7 @@
 %% ------------------------------------------------------------------
 
 -module(pt_map).
--behaviour(pt_kv_store).
+-behaviour(pt_kvstore).
 
 %% API
 -export([
