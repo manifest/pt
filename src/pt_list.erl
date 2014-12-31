@@ -26,12 +26,32 @@
 
 %% API
 -export([
+	first/1,
+	second/1,
+	next/1,
+	rest/1,
 	deepmap/2
 ]).
 
 %% ==================================================================
 %% API
 %% ==================================================================
+
+-spec first(list()) -> any().
+first([H|_]) -> H;
+first([])    -> error(nomatch).
+
+-spec second(list()) -> any().
+second([_,S|_]) -> S;
+second([])      -> error(nomatch).
+
+-spec next(list()) -> list().
+next([_|T]) -> T;
+next([])    -> error(nomatch).
+
+-spec rest(list()) -> list().
+rest([_|T]) -> T;
+rest([])    -> [].
 
 -spec deepmap(fun((any()) -> any()), list()) -> list().
 deepmap(_, []) ->

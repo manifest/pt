@@ -68,7 +68,7 @@ get(Key, M, Default) ->
 -spec get_in([any()], map()) -> any().
 get_in(Keys, M) ->
 	case find_in(Keys, M) of
-		undefined -> erlang:error(bad_key);
+		undefined -> error(bad_key);
 		Val       -> Val 
 	end.
 

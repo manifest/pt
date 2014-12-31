@@ -62,7 +62,7 @@ values(L) ->
 -spec get(any(), kvlist()) -> any().
 get(Key, L) ->
 	case find(Key, L) of
-		undefined -> erlang:error(bad_key);
+		undefined -> error(bad_key);
 		Val       -> Val
 	end.
 
@@ -76,7 +76,7 @@ get(Key, L, Default) ->
 -spec get_in([any()], kvlist()) -> any().
 get_in(Keys, L) ->
 	case find_in(Keys, L) of
-		undefined -> erlang:error(bad_key);
+		undefined -> error(bad_key);
 		Val       -> Val 
 	end.
 
