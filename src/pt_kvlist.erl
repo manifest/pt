@@ -1,7 +1,7 @@
 %% ------------------------------------------------------------------
 %% The MIT License
 %%
-%% Copyright (c) 2014 Andrei Nesterov <ae.nesterov@gmail.com>
+%% Copyright (c) 2014-2015 Andrei Nesterov <ae.nesterov@gmail.com>
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a copy
 %% of this software and associated documentation files (the "Software"), to
@@ -61,35 +61,19 @@ values(L) ->
 
 -spec get(any(), kvlist()) -> any().
 get(Key, L) ->
-	case find(Key, L) of
-		undefined -> error(bad_key);
-		Val       -> Val
-	end.
+	get_(Key, L, fun bad_key_error/0).
 
 -spec get(any(), kvlist(), any()) -> any().
 get(Key, L, Default) ->
-	case lists:keyfind(Key, 1, L) of
-		{Key, Val} -> Val;
-		false      -> Default
-	end.
+	get_(Key, L, fun() -> Default end).
 
 -spec get_in([any()], kvlist()) -> any().
 get_in(Keys, L) ->
-	case find_in(Keys, L) of
-		undefined -> error(bad_key);
-		Val       -> Val 
-	end.
+	get_in_(Keys, L, fun bad_key_error/0).
 
 -spec get_in([any()], kvlist(), any()) -> any().
-get_in([], L, _) ->
-	L;
-get_in([Key|Keys], L, Default) ->
-	Child = ?MODULE:get(Key, L, Default),
-	case {Child =/= Default, Keys} of
-		{_,    []} -> Child;
-		{false, _} -> Child;
-		{true,  _} -> get_in(Keys, Child, Default)
-	end.
+get_in(Keys, L, Default) ->
+	get_in_(Keys, L, fun() -> Default end).
 
 -spec find(any(), kvlist()) -> undefined | any().
 find(Key, L) ->
@@ -133,6 +117,30 @@ is_empty(L) ->
 	L =:= [].
 
 %% ==================================================================
+%% Internal functions 
+%% ==================================================================
+
+-spec get_(any(), kvlist(), fun()) -> any().
+get_(Key, L, Default) ->
+	case lists:keyfind(Key, 1, L) of
+		{Key, Val} -> Val;
+		false      -> Default()
+	end.
+
+-spec get_in_([any()], kvlist(), fun()) -> any().
+get_in_([], L, _) ->
+	L;
+get_in_([H|T], L, Default) when is_list(L) ->
+	Child = get_(H, L, Default),
+	get_in_(T, Child, Default);
+get_in_(_, _, Default) ->
+	Default().
+
+-spec bad_key_error() -> no_return().
+bad_key_error() ->
+	error(bad_key).
+
+%% ==================================================================
 %% Tests 
 %% ==================================================================
 
@@ -165,7 +173,9 @@ get_test_() ->
 		{"key exists",
 			?_assertEqual(1, ?MODULE:get(a, [{a, 1}, {b, 2}]))},
 		{"key exist w/ default",
-			?_assertEqual(1, ?MODULE:get(a, [{a, 1}, {b, 2}], default))} ].
+			?_assertEqual(1, ?MODULE:get(a, [{a, 1}, {b, 2}], default))},
+		{"value == undefined]",
+			?_assertEqual(undefined, ?MODULE:get(a, [{a, undefined}]))} ].
 
 find_test_() ->
 	Test =
@@ -203,7 +213,9 @@ get_in_test_() ->
 		{"keys list empty",
 			?_assertEqual([{a, 1}, {b, 2}], get_in([],  [{a, 1}, {b, 2}]))},
 		{"keys list empty w/ default",
-			?_assertEqual([{a, 1}, {b, 2}], get_in([],  [{a, 1}, {b, 2}], default))} ].
+			?_assertEqual([{a, 1}, {b, 2}], get_in([],  [{a, 1}, {b, 2}], default))},
+		{"value == undefined]",
+			?_assertEqual(undefined, ?MODULE:get_in([a, b], [{a, [{b, undefined}]}]))} ].
 
 find_in_test_() ->
 	Test =

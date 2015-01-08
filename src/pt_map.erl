@@ -1,7 +1,7 @@
 %% ------------------------------------------------------------------
 %% The MIT License
 %%
-%% Copyright (c) 2014 Andrei Nesterov <ae.nesterov@gmail.com>
+%% Copyright (c) 2014-2015 Andrei Nesterov <ae.nesterov@gmail.com>
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining a copy
 %% of this software and associated documentation files (the "Software"), to
@@ -60,28 +60,15 @@ get(Key, M) ->
 
 -spec get(any(), map(), any()) -> any().
 get(Key, M, Default) ->
-	case maps:find(Key, M) of
-		{ok, Val} -> Val;
-		error     -> Default
-	end.
+	maps:get(Key, M, Default).
 
 -spec get_in([any()], map()) -> any().
 get_in(Keys, M) ->
-	case find_in(Keys, M) of
-		undefined -> error(bad_key);
-		Val       -> Val 
-	end.
+	get_in_(Keys, M, fun bad_key_error/0).
 
 -spec get_in([any()], map(), any()) -> any().
-get_in([], M, _) ->
-	M;
-get_in([Key|Keys], M, Default) ->
-	Child = ?MODULE:get(Key, M, Default),
-	case {Child =/= Default, Keys} of
-		{_,    []} -> Child;
-		{false, _} -> Child;
-		{true,  _} -> get_in(Keys, Child, Default)
-	end.
+get_in(Keys, M, Default) ->
+	get_in_(Keys, M, fun() -> Default end).
 
 -spec find(any(), map()) -> undefined | any().
 find(Key, M) ->
@@ -118,6 +105,30 @@ is_empty(M) ->
 	maps:size(M) =:= 0.
 
 %% ==================================================================
+%% Internal functions
+%% ==================================================================
+
+-spec get_(any(), map(), fun()) -> any().
+get_(Key, M, Default) ->
+	case maps:find(Key, M) of
+		{ok, Val} -> Val;
+		error     -> Default()
+	end.
+
+-spec get_in_([any()], map(), fun()) -> any().
+get_in_([], M, _) ->
+	M;
+get_in_([H|T], M, Default) when is_map(M) ->
+	Child = get_(H, M, Default),
+	get_in_(T, Child, Default);
+get_in_(_, _, Default) ->
+	Default().
+
+-spec bad_key_error() -> no_return().
+bad_key_error() ->
+	error(bad_key).
+
+%% ==================================================================
 %% Tests 
 %% ==================================================================
 
@@ -150,7 +161,9 @@ get_test_() ->
 		{"key exists",
 			?_assertEqual(1, ?MODULE:get(a, #{a => 1, b => 2}))},
 		{"key exist w/ default",
-			?_assertEqual(1, ?MODULE:get(a, #{a => 1, b => 2}, default))} ].
+			?_assertEqual(1, ?MODULE:get(a, #{a => 1, b => 2}, default))},
+		{"value == undefined",
+			?_assertEqual(undefined, ?MODULE:get(a, #{a => undefined}))} ].
 
 get_in_test_() ->
 	[	{"map empty",
@@ -180,7 +193,9 @@ get_in_test_() ->
 		{"keys list empty",
 			?_assertEqual(#{a => 1, b => 2}, get_in([],  #{a => 1, b => 2}))},
 		{"keys list empty w/ default",
-			?_assertEqual(#{a => 1, b => 2}, get_in([],  #{a => 1, b => 2}, default))} ].
+			?_assertEqual(#{a => 1, b => 2}, get_in([],  #{a => 1, b => 2}, default))},
+		{"value == undefined",
+			?_assertEqual(undefined, ?MODULE:get_in([a, b], #{a => #{b => undefined}}))} ].
 
 find_test_() ->
 	Test =

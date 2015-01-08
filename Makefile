@@ -23,7 +23,7 @@ dialyze:
 		--no_native \
 		-Werror_handling \
 		-Wrace_conditions \
-		-Wunmatched_returns 
+		-Wunmatched_returns
 
 xref:
 	rebar xref skip_deps=true
