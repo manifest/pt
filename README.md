@@ -6,7 +6,7 @@ Small Erlang library for the big fight against routine data manipulations.
 
 ### How to use
 
-#### Manipulations with Key-Value Lists
+Manipulations with Key-Value Lists
 
 ```erlang
 1>  L = [{a, 1}, {b, 2}, {c, [{d, 3}]}].
@@ -32,7 +32,7 @@ undefined
 [{b,2},{a,1}]
 ```
 
-#### Manipulations with Maps
+Manipulations with Maps
 
 ```erlang
 1> M = #{a => 1, b => 2, c => #{d => 3}}.
@@ -60,7 +60,7 @@ undefined
 #{a => 1,b => 2}
 ```
 
-#### In case you don't want to care about the type of container.
+In case you don't want to care about the type of container
 
 ```erlang
 1> L = [{a, 1}, {b, 2}, {c, [{d, 3}]}].
