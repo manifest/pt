@@ -2,108 +2,94 @@
 
 [![Build Status][travis_img]][travis]
 
-an experimental set of helper functions 
+Small Erlang library for the big fight against routine data manipulations.
 
-### Quick Look
+### How to use
 
-#### Key-value collections with same behaviour
-
-- `pt_map` is a thin wrapper around erlang map
-- `pt_kvlist` is a list of key-value elements `[{key(), value()}]`
-- `pt_kvterm` contains functions to work with both `pt_map` and `pt_kvlist`
-
-For instance, `get/2` function always throws an error when key not found in the collection
+#### Manipulations with Key-Value Lists
 
 ```erlang
-1> pt_map:get(a, #{}).
+1>  L = [{a, 1}, {b, 2}, {c, [{d, 3}]}].
+[{a,1},{b,2},{c,[{d,3}]}]
+2> pt_kvlist:keys(L).
+[a,b,c]
+3> pt_kvlist:values(L).
+[1,2,[{d,3}]]
+4> pt_kvlist:get(a, L).
+1
+5> pt_kvlist:get(z, L).
 ** exception error: bad_key
-		 in function  maps:get/2
-				called as maps:get(a,#{})
-		 in call from pt_map:get/2 (src/pt_map.erl, line 35)
-2> pt_kvlist:get(a, []). 
+     in function  pt_kvlist:bad_key_error/0 (src/pt_kvlist.erl, line 141)
+6> pt_kvlist:get(z, L, undefined).
+undefined
+7> pt_kvlist:find(z, L).          
+undefined
+8> pt_kvlist:find(a, L).
+1
+9> pt_kvlist:get_in([c, d], L).
+3
+10> pt_kvlist:select_keys([a, b], L).
+[{b,2},{a,1}]
+```
+
+#### Manipulations with Maps
+
+```erlang
+1> M = #{a => 1, b => 2, c => #{d => 3}}.
+#{a => 1,b => 2,c => #{d => 3}}
+2> pt_map:keys(M).
+[a,b,c]
+3> pt_map:values(M).
+[1,2,#{d => 3}]
+4> pt_map:get(a, M).
+1
+5> pt_map:get(z, M).
 ** exception error: bad_key
-		 in function  pt_kvlist:get/2 (src/pt_kvlist.erl, line 41)
+     in function  maps:get/2
+        called as maps:get(z,#{a => 1,b => 2,c => #{d => 3}})
+     in call from pt_map:get/2 (src/pt_map.erl, line 59)
+6> pt_map:get(z, M, undefined).
+undefined
+7> pt_map:find(z, M).          
+undefined
+8> pt_map:find(a, M).
+1
+9> pt_map:get_in([c, d], M).
+3
+10> pt_map:select_keys([a, b], M).
+#{a => 1,b => 2}
 ```
 
-All modules implement an `get/3` function which takes an default value as third argument
+#### In case you don't want to care about the type of container.
 
 ```erlang
-3> pt_map:get(a, #{}, undefined).
-undefined
-4> pt_kvlist:get(a, [], undefined).
-undefined
-```
-
-`find/2` is the alias of the `get/3` function, default value is set to `undefined`
-	
-```erlang
-5> pt_map:find(a, #{}).           
-undefined
-6> pt_kvlist:find(a, []).          
-undefined
-```
-
-`put/3` inserts a new element
-
-```erlang
-7> pt_map:put(a, 1, #{b => 2, c => 3}). 
-#{a => 1,b => 2,c => 3}
-8> pt_kvlist:put(a, 1, [{b, 2}, {c, 3}]).
-[{a,1},{b,2},{c,3}]
-```
-
-Use `pt_kvterm` to work with unknown data structures. No matter is it map or list.
-
-```erlang
-9> pt_kvterm:put(a, 1, #{b => 2, c => 3}).
-#{a => 1,b => 2,c => 3}
-10> pt_kvterm:put(a, 1, [{b, 2}, {c, 3}]). 
-[{a,1},{b,2},{c,3}]
+1> L = [{a, 1}, {b, 2}, {c, [{d, 3}]}].
+[{a,1},{b,2},{c,[{d,3}]}]
+2> M = #{a => 1, b => 2, c => #{d => 3}}.
+#{a => 1,b => 2,c => #{d => 3}}
+3> pt_kvterm:keys(L).
+[a,b,c]
+4> pt_kvterm:keys(M).
+[a,b,c]
+5> pt_kvterm:values(L).
+[1,2,[{d,3}]]
+6> pt_kvterm:values(M).
+[1,2,#{d => 3}]
+7> pt_kvterm:get(a, L).
+1
+8> pt_kvterm:get(a, M).
+1
+9> pt_kvterm:get_in([c, d], L).
+3
+10> pt_kvterm:get_in([c, d], M).
+3
+11> pt_kvterm:select_keys([a, b], L).
+[{b,2},{a,1}]
+12> pt_kvterm:select_keys([a, b], M).
+#{a => 1,b => 2}
 ```
 
 There are more helpful functions, see `pt_kvstore` behaviour for more information
-
-```erlang
-11> pt_map:get_in([b, ba], #{a => 1, b => #{ba => 21, bb => 22}}).
-21
-12> pt_kvlist:get_in([b, ba], [{a, 1}, {b, [{ba, 21}, {bb, 22}]}]).
-21
-```
-
-#### Binary
-
-Joining binary
-
-```erlang
-1> pt_binary:join([<<"Hello ">>, <<"world ">>, <<$!>>]).        
-<<"Hello world !">>
-2> pt_binary:join([<<"Hello">>, <<"world">>, <<$!>>], <<$\s>>). 
-<<"Hello world !">>
-```
-
-#### Term
-
-Convert any erlang term to a binary
-
-```erlang
-1> pt_term:to_binary(1).
-<<"1">>
-2> pt_term:to_binary(a).       
-<<"a">>
-3> pt_term:to_binary("list").
-<<"list">>
-```
-
-Convert any erlang term to a list
-	
-```erlang
-4> pt_term:to_list(1).              
-"1"
-5> pt_term:to_list(a).
-"a"
-6> pt_term:to_list(<<"binary">>).
-"binary"
-```
 
 ### License
 
