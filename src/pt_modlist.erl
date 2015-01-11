@@ -33,7 +33,10 @@
 	calll_sublist/3,
 	calll_sublist/4,
 	callr_sublist/3,
-	callr_sublist/4
+	callr_sublist/4,
+	find/3,
+	sublistl/3,
+	sublistr/3
 ]).
 
 %% ==================================================================
@@ -42,11 +45,19 @@
 
 -spec calll(list(module()), atom(), list()) -> any().
 calll(Mods, Fun, Args) ->
-	calll_(Mods, Mods, Fun, Args, fun bad_call_error/3).
+	Arity = length(Args),
+	case find(Mods, Fun, Arity) of
+		{ok, Mod} -> apply(Mod, Fun, Args);
+		error     -> error({bad_call, Mods, Fun, Arity})
+	end.
 
 -spec calll(list(module()), atom(), list(), any()) -> any().
 calll(Mods, Fun, Args, Default) ->
-	calll_(Mods, Mods, Fun, Args, wrap_default_value(Default)).
+	Arity = length(Args),
+	case find(Mods, Fun, Arity) of
+		{ok, Mod} -> apply(Mod, Fun, Args);
+		error     -> Default
+	end.
 
 -spec callr(list(module()), atom(), list()) -> any().
 callr(Mods, Fun, Args) ->
@@ -59,61 +70,68 @@ callr(Mods, Fun, Args, Default) ->
 -spec calll_sublist(list(module()), atom(), list()) -> any().
 calll_sublist(Mods, Fun, Args) ->
 	Arity = length(Args) +1,
-	calll_sublist_(Mods, Mods, Fun, Args, Arity, fun bad_call_error/3).
+	case sublistl(Mods, Fun, Arity) of
+		[Mod|_] = SubL -> apply(Mod, Fun, [SubL|Args]);
+		[]             -> error({bad_call, Mods, Fun, Arity})
+	end.
 
 -spec calll_sublist(list(module()), atom(), list(), any()) -> any().
 calll_sublist(Mods, Fun, Args, Default) ->
 	Arity = length(Args) +1,
-	calll_sublist_(Mods, Mods, Fun, Args, Arity, wrap_default_value(Default)).
+	case sublistl(Mods, Fun, Arity) of
+		[Mod|_] = SubL -> apply(Mod, Fun, [SubL|Args]);
+		[]             -> Default
+	end.
 
 -spec callr_sublist(list(module()), atom(), list()) -> any().
 callr_sublist(Mods, Fun, Args) ->
 	Arity = length(Args) +1,
-	callr_sublist_(Mods, lists:reverse(Mods), Fun, Args, Arity, [], fun bad_call_error/3).
+	case sublistr(Mods, Fun, Arity) of
+		[Mod|_] = SubL -> apply(Mod, Fun, [SubL|Args]);
+		[]             -> error({bad_call, Mods, Fun, Arity})
+	end.
 
 -spec callr_sublist(list(module()), atom(), list(), any()) -> any().
 callr_sublist(Mods, Fun, Args, Default) ->
 	Arity = length(Args) +1,
-	callr_sublist_(Mods, lists:reverse(Mods), Fun, Args, Arity, [], wrap_default_value(Default)).
+	case sublistr(Mods, Fun, Arity) of
+		[Mod|_] = SubL -> apply(Mod, Fun, [SubL|Args]);
+		[]             -> Default
+	end.
+
+-spec find(list(module()), atom(), arity()) -> {ok, module()} | error.
+find([H|T], Fun, Arity) ->
+	case erlang:function_exported(H, Fun, Arity) of
+		true  -> {ok, H};
+		false -> find(T, Fun, Arity)
+	end;
+find([], _, _) ->
+	error.
+
+-spec sublistl(list(module()), atom(), arity()) -> list(module()).
+sublistl([H|T] = Mods, Fun, Arity) ->
+	case erlang:function_exported(H, Fun, Arity) of
+		true  -> Mods;
+		false -> sublistl(T, Fun, Arity)
+	end;
+sublistl([], _, _) ->
+	[].
+
+-spec sublistr(list(module()), atom(), arity()) -> list(module()).
+sublistr(Mods, Fun, Arity) ->
+	sublistr([], lists:reverse(Mods), Fun, Arity).
 
 %% ==================================================================
 %% Internal functions
 %% ==================================================================
 
--spec calll_(list(module()), list(module()), atom(), list(), fun()) -> any().
-calll_(InMods, [Mod|T], Fun, Args, Default) ->
-	Arity = length(Args),
-	case erlang:function_exported(Mod, Fun, Arity) of
-		true  -> apply(Mod, Fun, Args);
-		false -> calll_(InMods, T, Fun, Args, Default)
+-spec sublistr(list(module()), list(module()), atom(), arity()) -> list(module()).
+sublistr(Acc, [H|T], Fun, Arity) ->
+	Acc2 = [H|Acc],
+	case erlang:function_exported(H, Fun, Arity) of
+		true  -> Acc2;
+		false -> sublistr(Acc2, T, Fun, Arity)
 	end;
-calll_(InMods, [], Fun, Args, Default) ->
-	Default(InMods, Fun, length(Args)).
-
--spec calll_sublist_(list(module()), list(module()), atom(), list(), arity(), fun()) -> any().
-calll_sublist_(InMods, [Mod|T] = Mods, Fun, Args, Arity, Default) ->
-	case erlang:function_exported(Mod, Fun, Arity) of
-		true  -> apply(Mod, Fun, [Mods|Args]);
-		false -> calll_sublist_(InMods, T, Fun, Args, Arity, Default)
-	end;
-calll_sublist_(InMods, [], Fun, _, Arity, Default) ->
-	Default(InMods, Fun, Arity).
-
--spec callr_sublist_(list(module()), list(module()), atom(), list(), arity(), list(module()), fun()) -> any().
-callr_sublist_(InMods, [Mod|T], Fun, Args, Arity, Acc, Default) ->
-	Acc2 = [Mod|Acc],
-	case erlang:function_exported(Mod, Fun, Arity) of
-		true  -> apply(Mod, Fun, [Acc2|Args]);
-		false -> callr_sublist_(InMods, T, Fun, Args, Arity, Acc2, Default)
-	end;
-callr_sublist_(InMods, [], Fun, _, Arity, _, Default) ->
-	Default(InMods, Fun, Arity).
-
--spec bad_call_error(list(module()), atom(), arity()) -> no_return().
-bad_call_error(Mods, Fun, Arity) ->
-	error({bad_call, Mods, Fun, Arity}).
-
--spec wrap_default_value(any()) -> fun((list(module()), atom(), arity()) -> any()).
-wrap_default_value(Val) ->
-	fun(_, _, _) -> Val end.
+sublistr(_, [], _, _) ->
+	[].
 

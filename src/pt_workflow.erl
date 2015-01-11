@@ -100,7 +100,7 @@ modules(#wf{mods = Mods}) ->
 	Mods.
 
 %% ==================================================================
-%% Internal function
+%% Internal functions
 %% ==================================================================
 
 -spec decl(atom(), declaration(), workflow()) -> workflow().
