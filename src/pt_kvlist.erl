@@ -35,7 +35,7 @@
 	get_in/3,
 	find/2,
 	find_in/2,
-	select_keys/2,
+	with/2,
 	put/3,
 	merge/2,
 	remove/2,
@@ -103,8 +103,8 @@ find_in([H|T], L) when is_list(L) ->
 find_in([_], _)  -> error;
 find_in([], Val) -> {ok, Val}.
 
--spec select_keys(list(), kvlist()) -> kvlist().
-select_keys(Keys, L) ->
+-spec with(list(), kvlist()) -> kvlist().
+with(Keys, L) ->
 	lists:foldl(
 		fun({Key, Val}, Acc) ->
 			case lists:member(Key, Keys) of
@@ -225,7 +225,7 @@ find_in_test_() ->
 
 	[{Desc, ?_assertEqual(Output, find_in(Keys, L))} || {Desc, Keys, L, Output} <- Test].
 
-select_keys_test_() ->
+with_test_() ->
 	Test =
 		[	{"list empty",      [a, b], [],               []},
 			{"key not exist",   [a, b], [{b, 2}, {c, 3}], [{b, 2}]},
@@ -233,7 +233,7 @@ select_keys_test_() ->
 			{"keys exist",      [a, b], [{a, 1}, {b, 2}], [{b, 2}, {a, 1}]},
 			{"keys list empty", [],     [{a, 1}, {b, 2}], []} ],
 
-	[{Desc, ?_assertEqual(Output, select_keys(Keys, L))} || {Desc, Keys, L, Output} <- Test].
+	[{Desc, ?_assertEqual(Output, with(Keys, L))} || {Desc, Keys, L, Output} <- Test].
 
 put_test_() ->
 	Test =

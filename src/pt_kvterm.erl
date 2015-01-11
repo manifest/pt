@@ -35,7 +35,7 @@
 	get_in/3,
 	find/2,
 	find_in/2,
-	select_keys/2,
+	with/2,
 	put/3,
 	merge/2,
 	remove/2,
@@ -110,9 +110,9 @@ find(Key, T) ->
 find_in(Keys, T) ->
 	?BRIDGE(find_in, Keys, T).
 
--spec select_keys(list(), kvterm()) -> kvterm().
-select_keys(Keys, T) ->
-	?BRIDGE(select_keys, Keys, T).
+-spec with(list(), kvterm()) -> kvterm().
+with(Keys, T) ->
+	?BRIDGE(with, Keys, T).
 
 -spec put(any(), any(), kvterm()) -> kvterm().
 put(Key, Val, T) ->

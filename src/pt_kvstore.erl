@@ -72,7 +72,7 @@
 		Val     :: any(),
 		Store   :: any().
 
--callback select_keys(Keys, Store) -> NewStore
+-callback with(Keys, Store) -> NewStore
 	when
 		Keys     :: list(),
 		Store    :: any(),

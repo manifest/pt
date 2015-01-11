@@ -35,7 +35,7 @@
 	get_in/3,
 	find/2,
 	find_in/2,
-	select_keys/2,
+	with/2,
 	put/3,
 	merge/2,
 	remove/2,
@@ -89,15 +89,9 @@ find_in([H|T], M) when is_map(M) ->
 find_in([_], _)  -> error;
 find_in([], Val) -> {ok, Val}.
 
--spec select_keys(list(), map()) -> #{}.
-select_keys(Keys, M) ->
-	lists:foldl(
-		fun(Key, Acc) ->
-			case find(Key, M) of
-				{ok, Val} -> maps:put(Key, Val, Acc);
-				error     -> Acc
-			end
-		end, #{}, Keys).
+-spec with(list(), map()) -> #{}.
+with(Keys, M) ->
+	maps:with(Keys, M).
 
 -spec put(any(), any(), map()) -> map().
 put(Key, Val, M) ->
@@ -200,7 +194,7 @@ find_in_test_() ->
 
 	[{Desc, ?_assertEqual(Output, find_in(Keys, M))} || {Desc, Keys, M, Output} <- Test].
 
-select_keys_test_() ->
+with_test_() ->
 	Test =
 		[	{"map empty",       [a, b], #{},               #{}},
 			{"key not exist",   [a, b], #{b => 2, c => 3}, #{b => 2}},
@@ -208,7 +202,7 @@ select_keys_test_() ->
 			{"keys exist",      [a, b], #{a => 1, b => 2}, #{a => 1, b => 2}},
 			{"keys list empty", [],     #{a => 1, b => 2}, #{}} ],
 
-	[{Desc, ?_assertEqual(Output, select_keys(Keys, M))} || {Desc, Keys, M, Output} <- Test].
+	[{Desc, ?_assertEqual(Output, with(Keys, M))} || {Desc, Keys, M, Output} <- Test].
 
 put_test_() ->
 	Test =
