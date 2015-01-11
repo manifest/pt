@@ -22,13 +22,17 @@ Manipulations with Key-Value Lists
      in function  pt_kvlist:bad_key_error/0 (src/pt_kvlist.erl, line 141)
 6> pt_kvlist:get(z, L, default).
 default
-7> pt_kvlist:find(z, L).          
-error
+7> pt_kvlist:get_in([c, d], L).
+3
 8> pt_kvlist:find(a, L).
 {ok, 1}
-9> pt_kvlist:get_in([c, d], L).
-3
-10> pt_kvlist:select_keys([a, b], L).
+9> pt_kvlist:find(z, L).
+error
+10> pt_kvlist:find_in([c, d], L).
+{ok,3}
+11> pt_kvlist:find_in([a, b], L).
+error
+12> pt_kvlist:with([a, b], L).
 [{b,2},{a,1}]
 ```
 
@@ -50,13 +54,17 @@ Manipulations with Maps
      in call from pt_map:get/2 (src/pt_map.erl, line 59)
 6> pt_map:get(z, M, default).
 default
-7> pt_map:find(z, M).          
-error
+7> pt_map:get_in([c, d], M).
+3
 8> pt_map:find(a, M).
 {ok, 1}
-9> pt_map:get_in([c, d], M).
-3
-10> pt_map:select_keys([a, b], M).
+9> pt_map:find(z, M).
+error
+10> pt_map:find_in([c, d], M).
+{ok,3}
+11> pt_map:find_in([a, b], M).
+error
+12> pt_map:with([a, b], M).
 #{a => 1,b => 2}
 ```
 
@@ -83,9 +91,9 @@ In case you don't want to care about the type of container
 3
 10> pt_kvterm:get_in([c, d], M).
 3
-11> pt_kvterm:select_keys([a, b], L).
+11> pt_kvterm:with([a, b], L).
 [{b,2},{a,1}]
-12> pt_kvterm:select_keys([a, b], M).
+12> pt_kvterm:with([a, b], M).
 #{a => 1,b => 2}
 ```
 
