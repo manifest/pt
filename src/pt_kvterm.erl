@@ -78,11 +78,11 @@
 %% API
 %% ==================================================================
 
--spec keys(kvterm()) -> [any()].
+-spec keys(kvterm()) -> list().
 keys(T) ->
 	?BRIDGE(keys, T).
 
--spec values(kvterm()) -> [any()].
+-spec values(kvterm()) -> list().
 values(T) ->
 	?BRIDGE(values, T).
 
@@ -94,23 +94,23 @@ get(Key, T) ->
 get(Key, T, Default) ->
 	?BRIDGE_D(get, Key, T, Default).
 
--spec get_in([any()], kvterm()) -> any().
+-spec get_in(list(), kvterm()) -> any().
 get_in(Keys, T) ->
 	?BRIDGE(get_in, Keys, T).
 
--spec get_in([any()], kvterm(), any()) -> any().
+-spec get_in(list(), kvterm(), any()) -> any().
 get_in(Keys, T, Default) ->
 	?BRIDGE_D(get_in, Keys, T, Default).
 
--spec find(any(), kvterm()) -> undefined | any().
+-spec find(any(), kvterm()) -> {ok, any()} | error.
 find(Key, T) ->
 	?BRIDGE(find, Key, T).
 
--spec find_in([any()], kvterm()) -> undefined | any().
+-spec find_in(list(), kvterm()) -> {ok, any()} | error.
 find_in(Keys, T) ->
 	?BRIDGE(find_in, Keys, T).
 
--spec select_keys([any()], kvterm()) -> kvterm().
+-spec select_keys(list(), kvterm()) -> kvterm().
 select_keys(Keys, T) ->
 	?BRIDGE(select_keys, Keys, T).
 

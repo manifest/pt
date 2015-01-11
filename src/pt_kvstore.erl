@@ -27,12 +27,12 @@
 -callback keys(Store) -> Vals
 	when
 		Store :: any(),
-		Vals  :: [any()].
+		Vals  :: list().
 
 -callback values(Store) -> Keys
 	when
 		Store :: any(),
-		Keys  :: [any()].
+		Keys  :: list().
 
 -callback get(Key, Store) -> Val
 	when
@@ -49,32 +49,32 @@
 
 -callback get_in(Keys, Store) -> Val
 	when
-		Keys    :: [any()],
+		Keys    :: list(),
 		Val     :: any(),
 		Store   :: any().
 
 -callback get_in(Keys, Store, Default) -> Default | Val
 	when
-		Keys    :: [any()],
+		Keys    :: list(),
 		Val     :: any(),
 		Default :: any(),
 		Store   :: any().
 
--callback find(Key, Store) -> undefined | Val
+-callback find(Key, Store) -> {ok, Val} | error
 	when
 		Key   :: any(),
 		Val   :: any(),
 		Store :: any().
 
--callback find_in(Keys, Store) -> Val
+-callback find_in(Keys, Store) -> {ok, Val} | error
 	when
-		Keys    :: [any()],
+		Keys    :: list(),
 		Val     :: any(),
 		Store   :: any().
 
 -callback select_keys(Keys, Store) -> NewStore
 	when
-		Keys     :: [any()],
+		Keys     :: list(),
 		Store    :: any(),
 		NewStore :: any().
 

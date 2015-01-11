@@ -51,39 +51,59 @@
 %% API
 %% ==================================================================
 
--spec keys(kvlist()) -> [any()].
+-spec keys(kvlist()) -> list().
 keys(L) ->
 	lists:map(fun({Key, _}) -> Key end, L).
 
--spec values(kvlist()) -> [any()].
+-spec values(kvlist()) -> list().
 values(L) ->
 	lists:map(fun({_, Val}) -> Val end, L).
 
 -spec get(any(), kvlist()) -> any().
 get(Key, L) ->
-	get_(Key, L, fun bad_key_error/0).
+	case find(Key, L) of
+		{ok, Val} -> Val;
+		_         -> error(bad_key)
+	end.
 
 -spec get(any(), kvlist(), any()) -> any().
 get(Key, L, Default) ->
-	get_(Key, L, fun() -> Default end).
+	case find(Key, L) of
+		{ok, Val} -> Val;
+		_         -> Default
+	end.
 
--spec get_in([any()], kvlist()) -> any().
+-spec get_in(list(), kvlist()) -> any().
 get_in(Keys, L) ->
-	get_in_(Keys, L, fun bad_key_error/0).
+	case find_in(Keys, L) of
+		{ok, Val} -> Val;
+		_         -> error(bad_key)
+	end.
 
--spec get_in([any()], kvlist(), any()) -> any().
+-spec get_in(list(), kvlist(), any()) -> any().
 get_in(Keys, L, Default) ->
-	get_in_(Keys, L, fun() -> Default end).
+	case find_in(Keys, L) of
+		{ok, Val} -> Val;
+		_         -> Default
+	end.
 
--spec find(any(), kvlist()) -> undefined | any().
+-spec find(any(), kvlist()) -> {ok, any()} | error.
 find(Key, L) ->
-	?MODULE:get(Key, L, undefined).
+	case lists:keyfind(Key, 1, L) of
+		{_, Val} -> {ok, Val};
+		false    -> error
+	end.
 
--spec find_in([any()], kvlist()) -> any().
-find_in(Keys, L) ->
-	get_in(Keys, L, undefined).
+-spec find_in(list(), list()) -> {ok, any()} | error.
+find_in([H|T], L) when is_list(L) ->
+	case find(H, L) of
+		{ok, Val} -> find_in(T, Val);
+		error     -> error
+	end;
+find_in([_], _)  -> error;
+find_in([], Val) -> {ok, Val}.
 
--spec select_keys([any()], kvlist()) -> kvlist().
+-spec select_keys(list(), kvlist()) -> kvlist().
 select_keys(Keys, L) ->
 	lists:foldl(
 		fun({Key, Val}, Acc) ->
@@ -115,30 +135,6 @@ remove(Key, L) ->
 -spec is_empty(kvlist()) -> boolean().
 is_empty(L) ->
 	L =:= [].
-
-%% ==================================================================
-%% Internal functions 
-%% ==================================================================
-
--spec get_(any(), kvlist(), fun()) -> any().
-get_(Key, L, Default) ->
-	case lists:keyfind(Key, 1, L) of
-		{Key, Val} -> Val;
-		false      -> Default()
-	end.
-
--spec get_in_([any()], kvlist(), fun()) -> any().
-get_in_([], L, _) ->
-	L;
-get_in_([H|T], L, Default) when is_list(L) ->
-	Child = get_(H, L, Default),
-	get_in_(T, Child, Default);
-get_in_(_, _, Default) ->
-	Default().
-
--spec bad_key_error() -> no_return().
-bad_key_error() ->
-	error(bad_key).
 
 %% ==================================================================
 %% Tests 
@@ -179,11 +175,11 @@ get_test_() ->
 
 find_test_() ->
 	Test =
-		[	{"list empty",    a, []},
-			{"key not exist", a, [{b, 2}, {c, 3}]},
-			{"key exists",    a, [{a, 1}, {b, 2}]} ],
+		[	{"list empty",    a, [],               error},
+			{"key not exist", a, [{b, 2}, {c, 3}], error},
+			{"key exists",    a, [{a, 1}, {b, 2}], {ok, 1}}],
 
-	[{Desc, ?_assertEqual(?MODULE:get(Key, L, undefined), find(Key, L))} || {Desc, Key, L} <- Test].
+	[{Desc, ?_assertEqual(Output, find(Key, L))} || {Desc, Key, L, Output} <- Test].
 
 get_in_test_() ->
 	[	{"list empty",
@@ -219,13 +215,13 @@ get_in_test_() ->
 
 find_in_test_() ->
 	Test =
-		[	{"list empty",            [a],     [],                                   undefined},
-			{"list empty 2-key",      [a, b],  [],                                   undefined},
-			{"key not exist",         [a],     [{b, 2}, {c, 3}],                     undefined},
-			{"key path not exist",    [a, b],  [{b, 2}, {c, 3}],                     undefined},
-			{"key exists",            [a],     [{a, 1}, {b, [{ba, 21}, {bb, 22}]}],  1},
-			{"key path exist",        [b, ba], [{a, 1}, {b, [{ba, 21}, {bb, 22}]}],  21},
-			{"keys list empty",       [],      [{a, 1}, {b, 2}],                     [{a, 1}, {b, 2}]} ],
+		[	{"list empty",            [a],     [],                                   error},
+			{"list empty 2-key",      [a, b],  [],                                   error},
+			{"key not exist",         [a],     [{b, 2}, {c, 3}],                     error},
+			{"key path not exist",    [a, b],  [{b, 2}, {c, 3}],                     error},
+			{"key exists",            [a],     [{a, 1}, {b, [{ba, 21}, {bb, 22}]}],  {ok, 1}},
+			{"key path exist",        [b, ba], [{a, 1}, {b, [{ba, 21}, {bb, 22}]}],  {ok, 21}},
+			{"keys list empty",       [],      [{a, 1}, {b, 2}],                     {ok, [{a, 1}, {b, 2}]}} ],
 
 	[{Desc, ?_assertEqual(Output, find_in(Keys, L))} || {Desc, Keys, L, Output} <- Test].
 

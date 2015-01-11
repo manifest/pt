@@ -46,11 +46,11 @@
 %% API
 %% ==================================================================
 
--spec keys(map()) -> [any()].
+-spec keys(map()) -> list().
 keys(M) ->
 	maps:keys(M).
 
--spec values(map()) -> [any()].
+-spec values(map()) -> list().
 values(M) ->
 	maps:values(M).
 
@@ -62,29 +62,40 @@ get(Key, M) ->
 get(Key, M, Default) ->
 	maps:get(Key, M, Default).
 
--spec get_in([any()], map()) -> any().
+-spec get_in(list(), map()) -> any().
 get_in(Keys, M) ->
-	get_in_(Keys, M, fun bad_key_error/0).
+	case find_in(Keys, M) of
+		{ok, Val} -> Val;
+		error     -> error(bad_key)
+	end.
 
--spec get_in([any()], map(), any()) -> any().
+-spec get_in(list(), map(), any()) -> any().
 get_in(Keys, M, Default) ->
-	get_in_(Keys, M, fun() -> Default end).
+	case find_in(Keys, M) of
+		{ok, Val} -> Val;
+		error     -> Default
+	end.
 
--spec find(any(), map()) -> undefined | any().
+-spec find(any(), map()) -> {ok, any()} | error.
 find(Key, M) ->
-	?MODULE:get(Key, M, undefined).
+	maps:find(Key, M).
 
--spec find_in([any()], map()) -> any().
-find_in(Keys, M) ->
-	get_in(Keys, M, undefined).
+-spec find_in(list(), map()) -> {ok, any()} | error.
+find_in([H|T], M) when is_map(M) ->
+	case find(H, M) of
+		{ok, Val} -> find_in(T, Val);
+		error     -> error
+	end;
+find_in([_], _)  -> error;
+find_in([], Val) -> {ok, Val}.
 
--spec select_keys([any()], map()) -> #{}.
+-spec select_keys(list(), map()) -> #{}.
 select_keys(Keys, M) ->
 	lists:foldl(
 		fun(Key, Acc) ->
 			case find(Key, M) of
-				undefined -> Acc;
-				Val       -> maps:put(Key, Val, Acc)
+				{ok, Val} -> maps:put(Key, Val, Acc);
+				error     -> Acc
 			end
 		end, #{}, Keys).
 
@@ -103,30 +114,6 @@ remove(Key, Map) ->
 -spec is_empty(map()) -> boolean().
 is_empty(M) ->
 	maps:size(M) =:= 0.
-
-%% ==================================================================
-%% Internal functions
-%% ==================================================================
-
--spec get_(any(), map(), fun()) -> any().
-get_(Key, M, Default) ->
-	case maps:find(Key, M) of
-		{ok, Val} -> Val;
-		error     -> Default()
-	end.
-
--spec get_in_([any()], map(), fun()) -> any().
-get_in_([], M, _) ->
-	M;
-get_in_([H|T], M, Default) when is_map(M) ->
-	Child = get_(H, M, Default),
-	get_in_(T, Child, Default);
-get_in_(_, _, Default) ->
-	Default().
-
--spec bad_key_error() -> no_return().
-bad_key_error() ->
-	error(bad_key).
 
 %% ==================================================================
 %% Tests 
@@ -161,9 +148,7 @@ get_test_() ->
 		{"key exists",
 			?_assertEqual(1, ?MODULE:get(a, #{a => 1, b => 2}))},
 		{"key exist w/ default",
-			?_assertEqual(1, ?MODULE:get(a, #{a => 1, b => 2}, default))},
-		{"value == undefined",
-			?_assertEqual(undefined, ?MODULE:get(a, #{a => undefined}))} ].
+			?_assertEqual(1, ?MODULE:get(a, #{a => 1, b => 2}, default))} ].
 
 get_in_test_() ->
 	[	{"map empty",
@@ -193,27 +178,25 @@ get_in_test_() ->
 		{"keys list empty",
 			?_assertEqual(#{a => 1, b => 2}, get_in([],  #{a => 1, b => 2}))},
 		{"keys list empty w/ default",
-			?_assertEqual(#{a => 1, b => 2}, get_in([],  #{a => 1, b => 2}, default))},
-		{"value == undefined",
-			?_assertEqual(undefined, ?MODULE:get_in([a, b], #{a => #{b => undefined}}))} ].
+			?_assertEqual(#{a => 1, b => 2}, get_in([],  #{a => 1, b => 2}, default))} ].
 
 find_test_() ->
 	Test =
-		[	{"map empty",     a, #{}},
-			{"key not exist", a, #{b => 2, c => 3}},
-			{"key exists",    a, #{a => 1, b => 2}} ],
+		[	{"map empty",     a, #{},               error},
+			{"key not exist", a, #{b => 2, c => 3}, error},
+			{"key exists",    a, #{a => 1, b => 2}, {ok, 1}} ],
 
-	[{Desc, ?_assertEqual(?MODULE:get(Key, M, undefined), find(Key, M))} || {Desc, Key, M} <- Test].
+	[{Desc, ?_assertEqual(Output, find(Key, M))} || {Desc, Key, M, Output} <- Test].
 
 find_in_test_() ->
 	Test =
-		[	{"map empty",             [a],     #{},                                   undefined},
-			{"map empty 2-key",       [a, b],  #{},                                   undefined},
-			{"key not exist",         [a],     #{b => 2, c => 3},                     undefined},
-			{"key path not exist",    [a, b],  #{b => 2, c => 3},                     undefined},
-			{"key exists",            [a],     #{a => 1, b => #{ba => 21, bb => 22}}, 1},
-			{"key path exist",        [b, ba], #{a => 1, b => #{ba => 21, bb => 22}}, 21},
-			{"keys list empty",       [],      #{a => 1, b => 2},                     #{a => 1, b => 2}} ],
+		[	{"map empty",             [a],     #{},                                   error},
+			{"map empty 2-key",       [a, b],  #{},                                   error},
+			{"key not exist",         [a],     #{b => 2, c => 3},                     error},
+			{"key path not exist",    [a, b],  #{b => 2, c => 3},                     error},
+			{"key exists",            [a],     #{a => 1, b => #{ba => 21, bb => 22}}, {ok, 1}},
+			{"key path exist",        [b, ba], #{a => 1, b => #{ba => 21, bb => 22}}, {ok, 21}},
+			{"keys list empty",       [],      #{a => 1, b => 2},                     {ok, #{a => 1, b => 2}}} ],
 
 	[{Desc, ?_assertEqual(Output, find_in(Keys, M))} || {Desc, Keys, M, Output} <- Test].
 
