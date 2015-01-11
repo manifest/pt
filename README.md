@@ -20,12 +20,12 @@ Manipulations with Key-Value Lists
 5> pt_kvlist:get(z, L).
 ** exception error: bad_key
      in function  pt_kvlist:bad_key_error/0 (src/pt_kvlist.erl, line 141)
-6> pt_kvlist:get(z, L, undefined).
-undefined
+6> pt_kvlist:get(z, L, default).
+default
 7> pt_kvlist:find(z, L).          
-undefined
+error
 8> pt_kvlist:find(a, L).
-1
+{ok, 1}
 9> pt_kvlist:get_in([c, d], L).
 3
 10> pt_kvlist:select_keys([a, b], L).
@@ -48,12 +48,12 @@ Manipulations with Maps
      in function  maps:get/2
         called as maps:get(z,#{a => 1,b => 2,c => #{d => 3}})
      in call from pt_map:get/2 (src/pt_map.erl, line 59)
-6> pt_map:get(z, M, undefined).
-undefined
+6> pt_map:get(z, M, default).
+default
 7> pt_map:find(z, M).          
-undefined
+error
 8> pt_map:find(a, M).
-1
+{ok, 1}
 9> pt_map:get_in([c, d], M).
 3
 10> pt_map:select_keys([a, b], M).
