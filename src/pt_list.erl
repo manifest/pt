@@ -30,6 +30,7 @@
 	second/1,
 	next/1,
 	rest/1,
+	with/2,
 	deepmap/2
 ]).
 
@@ -53,6 +54,10 @@ next([])    -> error(nomatch).
 rest([_|T]) -> T;
 rest([])    -> [].
 
+-spec with(list(), list()) -> list().
+with(Keys, L) ->
+	lists:filter(fun(T) -> lists:member(T, Keys) end, L).
+
 -spec deepmap(fun((any()) -> any()), list()) -> list().
 deepmap(_, []) ->
 	[];
@@ -67,6 +72,16 @@ deepmap(F, Val) ->
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
+
+with_test_() ->
+	Test =
+		[	{"list empty",      [a, b], [],     []},
+			{"key not exist",   [a, b], [b, c], [b]},
+			{"keys not exist",  [a, b], [c, d], []},
+			{"keys exist",      [a, b], [a, b], [a, b]},
+			{"keys list empty", [],     [a, b], []} ],
+
+	[{Desc, ?_assertEqual(Output, with(Keys, L))} || {Desc, Keys, L, Output} <- Test].
 
 deepmap_test_() ->
 	Fun = fun(Val) -> -Val end,
