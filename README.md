@@ -19,7 +19,7 @@ Manipulations with Key-Value Lists
 1
 5> pt_kvlist:get(z, L).
 ** exception error: bad_key
-     in function  pt_kvlist:bad_key_error/0 (src/pt_kvlist.erl, line 141)
+     in function  pt_kvlist:get/2 (src/pt_kvlist.erl, line 66)
 6> pt_kvlist:get(z, L, default).
 default
 7> pt_kvlist:get_in([c, d], L).
