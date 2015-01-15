@@ -45,7 +45,7 @@ distclean: clean
 start: build
 	erl \
 		-pa ebin deps/*/ebin \
-		-eval 'application:ensure_all_started(pt)' \
+		-eval 'application:ensure_all_started(pt, permanent)' \
 		-boot start_sasl \
 		-sasl errlog_type error
 
