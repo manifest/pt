@@ -32,9 +32,13 @@
 	init/2,
 	init/4,
 	calll/3,
+	calll/4,
 	callr/3,
+	callr/4,
 	calll_sublist/3,
+	calll_sublist/4,
 	callr_sublist/3,
+	callr_sublist/4,
 	modules/1,
 	state/1
 ]).
@@ -73,23 +77,39 @@ init(Mod, State) ->
 init(Decl, Init, Mod, State) ->
 	W1 = decl(Decl, Mod),
 	W2 = W1#wf{state = maps:merge(W1#wf.state, State)},
-	W2#wf{state = callr(Init, [], W2)}.
+	W2#wf{state = callr(Init, [], W2, W2#wf.state)}.
 
 -spec calll(atom(), list(), workflow()) -> any().
 calll(Fun, Args, #wf{mods = Mods, state = State}) ->
 	pt_modlist:calll(Mods, Fun, Args ++ [State]).
 
+-spec calll(atom(), list(), workflow(), any()) -> any().
+calll(Fun, Args, #wf{mods = Mods, state = State}, Default) ->
+	pt_modlist:calll(Mods, Fun, Args ++ [State], Default).
+
 -spec callr(atom(), list(), workflow()) -> any().
 callr(Fun, Args, #wf{mods = Mods, state = State}) ->
 	pt_modlist:callr(Mods, Fun, Args ++ [State]).
+
+-spec callr(atom(), list(), workflow(), any()) -> any().
+callr(Fun, Args, #wf{mods = Mods, state = State}, Default) ->
+	pt_modlist:callr(Mods, Fun, Args ++ [State], Default).
 
 -spec calll_sublist(atom(), list(), workflow()) -> any().
 calll_sublist(Fun, Args, #wf{mods = Mods, state = State}) ->
 	pt_modlist:calll_sublist(Mods, Fun, Args ++ [State]).
 
+-spec calll_sublist(atom(), list(), workflow(), any()) -> any().
+calll_sublist(Fun, Args, #wf{mods = Mods, state = State}, Default) ->
+	pt_modlist:calll_sublist(Mods, Fun, Args ++ [State], Default).
+
 -spec callr_sublist(atom(), list(), workflow()) -> any().
 callr_sublist(Fun, Args, #wf{mods = Mods, state = State}) ->
 	pt_modlist:callr_sublist(Mods, Fun, Args ++ [State]).
+
+-spec callr_sublist(atom(), list(), workflow(), any()) -> any().
+callr_sublist(Fun, Args, #wf{mods = Mods, state = State}, Default) ->
+	pt_modlist:callr_sublist(Mods, Fun, Args ++ [State], Default).
 
 -spec state(workflow()) -> map().
 state(#wf{state = State}) ->

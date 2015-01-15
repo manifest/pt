@@ -2,7 +2,7 @@
 
 [![Build Status][travis_img]][travis]
 
-Small Erlang library for the big fight against routine data manipulations.
+The small Erlang library for the big fight against routine data manipulations.
 
 ### How to use
 
@@ -101,7 +101,7 @@ There are more helpful functions, see `pt_kvstore` behaviour for more informatio
 
 ### License
 
-Provided under the terms of [the MIT license][license].
+The source code is provided under the terms of [the MIT license][license].
 
 [travis]:https://travis-ci.org/manifest/pt
 [travis_img]:https://secure.travis-ci.org/manifest/pt.png
