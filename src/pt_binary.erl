@@ -35,22 +35,17 @@
 %% ==================================================================
 
 -spec join(binary() | [binary()]) -> binary().
-join(List) ->
-	join(List, <<>>).
+join(L) ->
+	join(L, <<>>).
 
 -spec join(binary() | [binary()], binary()) -> binary().
-join(List, Separator) ->
-	case List of
-		[H|R] ->
-			lists:foldl(
-				fun(Val, Acc) ->
-					<<Acc/binary, Separator/binary, Val/binary>>
-				end, H, R);
-		[] ->
-			<<>>;
-		Val ->
-			Val
-	end.
+join([H|T], Sep) ->
+	lists:foldl(
+		fun(Val, Acc) ->
+			<<Acc/binary, Sep/binary, Val/binary>>
+		end, H, T);
+join([], _) -> <<>>;
+join(L, _)  -> L.
 
 %% ==================================================================
 %% Tests
@@ -60,17 +55,17 @@ join(List, Separator) ->
 -include_lib("eunit/include/eunit.hrl").
 
 join_test_() ->
-	Separator = <<",">>,
+	Sep = <<$,>>,
 	Test =
-		[ {"single value", [<<"b">>],            <<"b">>},
+		[ {"single value", [<<$b>>],            <<"b">>},
 		  {"list empty",   [[]],                 <<>>},
-		  {"list 1-val",   [[<<"a">>]],          <<"a">>},
-		  {"list 2-val",   [[<<"a">>, <<"b">>]], <<"ab">>},
+		  {"list 1-val",   [[<<$a>>]],          <<$a>>},
+		  {"list 2-val",   [[<<$a>>, <<$b>>]],  <<"ab">>},
 			%% w/ separator
-		  {"single value w/ separator", [<<"b">>,            Separator], <<"b">>},
-		  {"list empty   w/ separator", [[],                 Separator], <<>>},
-		  {"list 1-val   w/ separator", [[<<"a">>],          Separator], <<"a">>},
-		  {"list 2-val   w/ separator", [[<<"a">>, <<"b">>], Separator], <<"a,b">>} ],
+		  {"single value w/ separator", [<<$b>>,           Sep], <<"b">>},
+		  {"list empty   w/ separator", [[],               Sep], <<>>},
+		  {"list 1-val   w/ separator", [[<<$a>>],         Sep], <<$a>>},
+		  {"list 2-val   w/ separator", [[<<$a>>, <<$b>>], Sep], <<"a,b">>} ],
 	[{Desc, ?_assertEqual(Output, apply(?MODULE, join, Input))} || {Desc, Input, Output} <- Test].
 
 -endif.
