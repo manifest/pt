@@ -39,12 +39,9 @@ with(Keys, L) ->
 	lists:filter(fun(T) -> lists:member(T, Keys) end, L).
 
 -spec deepmap(fun((any()) -> any()), list()) -> list().
-deepmap(_, []) ->
-	[];
-deepmap(F, [H|T]) ->
-	[deepmap(F, H)|deepmap(F, T)];
-deepmap(F, Val) ->
-	F(Val).
+deepmap(_, [])    -> [];
+deepmap(F, [H|T]) -> [deepmap(F, H)|deepmap(F, T)];
+deepmap(F, Val)   -> F(Val).
 
 %% ==================================================================
 %% Tests 
