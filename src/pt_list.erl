@@ -29,6 +29,7 @@
 	with/2,
 	join/1,
 	join/2,
+	separate/2,
 	deepmap/2
 ]).
 
@@ -53,6 +54,12 @@ join(L) ->
 join(L, Sep) when not is_list(Sep) -> join(L, [Sep]);
 join([H|T], Sep) -> H ++ lists:append([Sep ++ X || X <- T]);
 join([], _)      -> [].
+
+-spec separate(list(), any()) -> list().
+separate([], _)      -> [];
+separate(L, Sep)     ->
+	[H|T] = lists:reverse(L),
+	lists:foldl(fun(Val, Acc) -> [Val,Sep|Acc] end, [H], T).
 
 %% ==================================================================
 %% Tests 
@@ -98,6 +105,14 @@ join_test_() ->
 	[{InDesc ++ SepDesc, ?_assertEqual(lists:nth(N, Output), join(Input, Sep))}
 		||	{{SepDesc, Sep}, N} <- lists:zip(SepL, lists:seq(1, length(SepL))),
 				{InDesc, Input, Output} <- Test].
+
+separate_test_() ->
+	Test =
+		[	{"list empty", [],     []},
+			{"list 1-val", [a],    [a]},
+			{"list 2-val", [a, a], [a, z, a]} ],
+
+	[{Desc, ?_assertEqual(Output, separate(Input, z))} || {Desc, Input, Output} <- Test].
 
 deepmap_test_() ->
 	Fun = fun(Val) -> -Val end,
