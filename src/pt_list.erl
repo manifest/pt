@@ -27,6 +27,8 @@
 %% API
 -export([
 	with/2,
+	join/1,
+	join/2,
 	deepmap/2
 ]).
 
@@ -42,6 +44,15 @@ with(Keys, L) ->
 deepmap(_, [])    -> [];
 deepmap(F, [H|T]) -> [deepmap(F, H)|deepmap(F, T)];
 deepmap(F, Val)   -> F(Val).
+
+-spec join(list() | [list()]) -> list().
+join(L) ->
+	join(L, []).
+
+-spec join(list() | [list()], list()) -> list().
+join(L, Sep) when not is_list(Sep) -> join(L, [Sep]);
+join([H|T], Sep) -> H ++ lists:append([Sep ++ X || X <- T]);
+join([], _)      -> [].
 
 %% ==================================================================
 %% Tests 
@@ -59,6 +70,34 @@ with_test_() ->
 			{"keys list empty", [],     [a, b], []} ],
 
 	[{Desc, ?_assertEqual(Output, with(Keys, L))} || {Desc, Keys, L, Output} <- Test].
+
+join_test_() ->
+	SepL =
+		[	{" w/ 1-val sep",      $z},
+			{" w/ 1-val list sep", [$z]},
+			{" w/ 2-val list sep", [$z, $z]},
+			{" w/ empty list sep", []} ],
+
+	Test =
+		[	{"list empty",  [],
+				[	[],
+					[],
+					[],
+					[] ]},
+			{"list 1-list", [[$a, $a]],
+				[	[$a, $a],
+					[$a, $a],
+					[$a, $a],
+					[$a, $a] ]},
+			{"list 2-list", [[$a, $a], [$b, $b]],
+				[	[$a, $a, $z, $b, $b],
+					[$a, $a, $z, $b, $b],
+					[$a, $a, $z, $z, $b, $b],
+					[$a, $a, $b, $b]]} ],
+
+	[{InDesc ++ SepDesc, ?_assertEqual(lists:nth(N, Output), join(Input, Sep))}
+		||	{{SepDesc, Sep}, N} <- lists:zip(SepL, lists:seq(1, length(SepL))),
+				{InDesc, Input, Output} <- Test].
 
 deepmap_test_() ->
 	Fun = fun(Val) -> -Val end,
