@@ -103,7 +103,7 @@ There are more helpful functions, see `pt_kvstore` behaviour for more informatio
 
 The source code is provided under the terms of [the MIT license][license].
 
-[travis]:https://travis-ci.org/manifest/pt
+[travis]:https://travis-ci.org/manifest/pt?branch=master
 [travis_img]:https://secure.travis-ci.org/manifest/pt.png
 [license]:http://www.opensource.org/licenses/MIT
 
