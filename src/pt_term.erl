@@ -39,7 +39,7 @@ to_binary(Val) when is_binary(Val)  -> Val;
 to_binary(Val) when is_list(Val)    -> erlang:list_to_binary(Val);
 to_binary(Val) when is_atom(Val)    -> erlang:atom_to_binary(Val, utf8);
 to_binary(Val) when is_integer(Val) -> erlang:integer_to_binary(Val);
-to_binary(Val) when is_float(Val)   -> erlang:float_to_binary(Val);
+to_binary(Val) when is_float(Val)   -> erlang:list_to_binary(io_lib_format:fwrite_g(Val));
 to_binary(_)                        -> erlang:throw(badarg).
 
 -spec to_list(binary() | string() | atom() | integer() | float()) -> list().
@@ -47,7 +47,7 @@ to_list(Val) when is_list(Val)    -> Val;
 to_list(Val) when is_binary(Val)  -> erlang:binary_to_list(Val);
 to_list(Val) when is_atom(Val)    -> erlang:atom_to_list(Val);
 to_list(Val) when is_integer(Val) -> erlang:integer_to_list(Val);
-to_list(Val) when is_float(Val)   -> erlang:float_to_list(Val);
+to_list(Val) when is_float(Val)   -> io_lib_format:fwrite_g(Val);
 to_list(_)                        -> erlang:throw(badarg).
 
 %% ============================================================================
@@ -63,7 +63,8 @@ to_binary_test_() ->
 			{"string",  "s",     <<"s">>},
 			{"binary",  <<"b">>, <<"b">>},
 			{"integer", 1,       <<"1">>},
-			{"float",   1.0,     <<"1.00000000000000000000e+00">>}],
+			{"float",   1.2,     <<"1.2">>},
+			{"float",   1.234,   <<"1.234">>} ],
 	[{Desc, ?_assertEqual(Output, ?MODULE:to_binary(Input))} || {Desc, Input, Output} <- Test].
 
 to_list_test_() ->
@@ -72,7 +73,8 @@ to_list_test_() ->
 			{"string",  "s",     "s"},
 			{"binary",  <<"b">>, "b"},
 			{"integer", 1,       "1"},
-			{"float",   1.0,     "1.00000000000000000000e+00"}],
+			{"float",   1.2,     "1.2"},
+			{"float",   1.234,   "1.234"} ],
 	[{Desc, ?_assertEqual(Output, ?MODULE:to_list(Input))} || {Desc, Input, Output} <- Test].
 
 -endif.
