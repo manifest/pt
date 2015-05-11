@@ -39,6 +39,10 @@
 	calll_sublist/4,
 	callr_sublist/3,
 	callr_sublist/4,
+	putl/2,
+	putl/3,
+	putr/2,
+	putr/3,
 	modules/1,
 	state/1
 ]).
@@ -111,6 +115,26 @@ callr_sublist(Fun, Args, #wf{mods = Mods, state = State}) ->
 callr_sublist(Fun, Args, #wf{mods = Mods, state = State}, Default) ->
 	pt_modlist:callr_sublist(Mods, Fun, Args ++ [State], Default).
 
+-spec putl(map(), workflow()) -> workflow().
+putl(State, W) ->
+	W#wf{state = maps:merge(State, W#wf.state)}.
+
+-spec putl(module(), map(), workflow()) -> workflow().
+putl(Mod, State, W) ->
+	W#wf{
+		mods = [Mod|W#wf.mods],
+		state = maps:merge(State, W#wf.state)}.
+
+-spec putr(map(), workflow()) -> workflow().
+putr(State, W) ->
+	W#wf{state = maps:merge(W#wf.state, State)}.
+
+-spec putr(module(), map(), workflow()) -> workflow().
+putr(Mod, State, W) ->
+	W#wf{
+		mods = W#wf.mods ++ [Mod],
+		state = maps:merge(W#wf.state, State)}.
+
 -spec state(workflow()) -> map().
 state(#wf{state = State}) ->
 	State.
@@ -125,13 +149,7 @@ modules(#wf{mods = Mods}) ->
 
 -spec decl(atom(), declaration(), workflow()) -> workflow().
 decl(Decl, {Base, Mod, State}, W) ->
-	decl(Decl, Base:Decl(), update(Mod, State, W));
+	decl(Decl, Base:Decl(), putl(Mod, State, W));
 decl(_, {Mod, State}, W) ->
-	update(Mod, State, W).
-
--spec update(module(), map(), workflow()) -> workflow().
-update(Mod, State, W) ->
-	W#wf{
-		mods = [Mod|W#wf.mods],
-		state = maps:merge(State, W#wf.state)}.
+	putl(Mod, State, W).
 
