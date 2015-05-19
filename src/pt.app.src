@@ -1,6 +1,6 @@
 {application, pt, [
 	{description, "Pragmatic Toolset"},
-	{vsn, "0.2.2"},
+	{vsn, "0.2.3"},
 	{id, "git"},
 	{modules, []},
 	{registered, []},
