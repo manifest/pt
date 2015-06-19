@@ -2,7 +2,7 @@
 
 [![Build Status][travis_img]][travis]
 
-The small Erlang library for the big fight against routine data manipulations.
+The tiny Erlang library for the big fight against routine data manipulations.
 
 ### How to use
 
